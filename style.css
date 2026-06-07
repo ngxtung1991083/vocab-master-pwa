@@ -54,3 +54,6 @@ button.secondary{background:#667085}button.danger{background:var(--danger)}butto
 #autoStudyBtn.auto-on{background:#039855}
 
 .sync-status{background:#f5f7fb;border-radius:14px;padding:10px;font-weight:700;color:#344054}
+
+select.changed,input.changed{outline:3px solid #f79009}
+.voice-note{font-size:13px;color:#667085}

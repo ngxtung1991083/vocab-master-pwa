@@ -1,4 +1,4 @@
-VOCAB MASTER PWA OFFLINE V7 STUDY FLOW PRO
+VOCAB MASTER PWA OFFLINE V8 VOICE CONTROL FIX
 
 BAN V4 CO GI MOI?
 - Co mat khau khoa app.
@@ -206,3 +206,26 @@ Mat truoc:
 Mat sau:
 - Chon hien Han tu / Pinyin / Tieng Viet / English.
 - Chon doc Tieng Viet / English / Han tu / Han tu -> Viet / Han tu -> English / ca 3.
+
+
+========================================
+V8 SUA LOI LUA CHON / GIONG DOC
+========================================
+1. Them nut Xac Nhan:
+- Xac Nhan Mat Truoc
+- Xac Nhan Mat Sau
+- Xac Nhan Cai Dat Hoc
+
+Sau khi chon hien gi/doc gi, bam Xac Nhan de cap nhat ngay.
+
+2. Giam thoi gian cho:
+- Mac dinh khoang nghi giua ngon ngu = 0 ms.
+- Khi bam doc ngon ngu moi, giong cu tu ngat ngay.
+
+3. AI Voice Server:
+- PWA offline khong tu chay Edge Neural TTS nhu laptop neu khong co server.
+- V8 da them che do "AI Voice Server giong app laptop".
+- Khi ban chay TTS server tren laptop/may chu noi bo, nhap URL vao o AI TTS Server URL.
+- Server can nhan POST JSON: {text, lang}
+- Server tra ve audio/mpeg hoac audio/wav.
+- Neu server loi, app tu fallback ve giong iPhone/trinh duyet.

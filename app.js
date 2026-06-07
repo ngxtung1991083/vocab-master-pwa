@@ -940,5 +940,239 @@ function speakCurrent(lang){
   speakText(text, lang, true); 
 }
 
+/* ===== V8 VOICE & CONTROL FIX OVERRIDES ===== */
+let v8SpeechToken = 0;
+let v8Audio = null;
+
+function markSettingsDirty(){
+  ["frontReadMode","backReadMode","readGap","autoNextDelay","voiceEngine","aiTtsUrl"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && !el.dataset.v8Bound){
+      el.dataset.v8Bound="1";
+      el.addEventListener("change",()=>el.classList.add("changed"));
+      el.addEventListener("input",()=>el.classList.add("changed"));
+    }
+  });
+}
+function confirmDisplaySettings(part){
+  saveDisplaySettings();
+  applyDisplaySettings();
+  renderCard();
+  document.querySelectorAll(".changed").forEach(x=>x.classList.remove("changed"));
+  toast(part==="front" ? "Đã cập nhật mặt trước" : part==="back" ? "Đã cập nhật mặt sau" : "Đã cập nhật cài đặt học");
+}
+
+function v7Settings(){
+  const s=settings();
+  return {
+    frontShowHanzi: s.frontShowHanzi !== false,
+    frontShowPinyin: s.frontShowPinyin === true,
+    frontShowVi: s.frontShowVi === true,
+    frontShowEn: s.frontShowEn === true,
+    backShowHanzi: s.backShowHanzi !== false,
+    backShowPinyin: s.backShowPinyin !== false,
+    backShowVi: s.backShowVi !== false,
+    backShowEn: s.backShowEn === true,
+    frontReadMode: s.frontReadMode || "zh",
+    backReadMode: s.backReadMode || "vi",
+    autoRead: s.autoRead === true,
+    autoShowBack: s.autoShowBack === true,
+    readGap: Number(s.readGap ?? 0),
+    autoNextDelay: Number(s.autoNextDelay || 3000),
+    voiceEngine: s.voiceEngine || "browser",
+    aiTtsUrl: s.aiTtsUrl || ""
+  };
+}
+
+function applyDisplaySettings(){
+  const s=v7Settings();
+  const setCheck=(id,val)=>{ const el=document.getElementById(id); if(el) el.checked=val; };
+  const setVal=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=String(val); };
+
+  setCheck("frontShowHanzi",s.frontShowHanzi);
+  setCheck("frontShowPinyin",s.frontShowPinyin);
+  setCheck("frontShowVi",s.frontShowVi);
+  setCheck("frontShowEn",s.frontShowEn);
+  setCheck("backShowHanzi",s.backShowHanzi);
+  setCheck("backShowPinyin",s.backShowPinyin);
+  setCheck("backShowVi",s.backShowVi);
+  setCheck("backShowEn",s.backShowEn);
+  setCheck("autoRead",s.autoRead);
+  setCheck("autoShowBack",s.autoShowBack);
+  setVal("frontReadMode",s.frontReadMode);
+  setVal("backReadMode",s.backReadMode);
+  setVal("readGap",s.readGap);
+  setVal("autoNextDelay",s.autoNextDelay);
+  setVal("voiceEngine",s.voiceEngine);
+  setVal("aiTtsUrl",s.aiTtsUrl);
+  const rg=document.getElementById("readGapValue"); if(rg) rg.textContent=s.readGap+" ms";
+  markSettingsDirty();
+}
+
+function saveDisplaySettings(){
+  const old=settings();
+  const get=(id)=>document.getElementById(id);
+  const readCheck=(id, fallback)=>get(id)?get(id).checked:fallback;
+  const readVal=(id, fallback)=>get(id)?get(id).value:fallback;
+
+  old.frontShowHanzi=readCheck("frontShowHanzi",true);
+  old.frontShowPinyin=readCheck("frontShowPinyin",false);
+  old.frontShowVi=readCheck("frontShowVi",false);
+  old.frontShowEn=readCheck("frontShowEn",false);
+  old.backShowHanzi=readCheck("backShowHanzi",true);
+  old.backShowPinyin=readCheck("backShowPinyin",true);
+  old.backShowVi=readCheck("backShowVi",true);
+  old.backShowEn=readCheck("backShowEn",false);
+  old.frontReadMode=readVal("frontReadMode","zh");
+  old.backReadMode=readVal("backReadMode","vi");
+  old.autoRead=readCheck("autoRead",false);
+  old.autoShowBack=readCheck("autoShowBack",false);
+  old.readGap=Number(readVal("readGap",0));
+  old.autoNextDelay=Number(readVal("autoNextDelay",3000));
+  old.voiceEngine=readVal("voiceEngine","browser");
+  old.aiTtsUrl=readVal("aiTtsUrl","");
+  saveSettings(old);
+}
+
+function stopAllSpeech(){
+  v8SpeechToken++;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  if(v8Audio){
+    try{ v8Audio.pause(); v8Audio.src=""; }catch(e){}
+    v8Audio=null;
+  }
+}
+
+async function speakText(text, lang, cancel=true){
+  const token = cancel ? (++v8SpeechToken) : v8SpeechToken;
+  if(cancel) stopAllSpeech();
+  if(!text) return;
+
+  const s=v7Settings();
+
+  // AI Voice Server mode: server should return audio/mpeg or audio/wav.
+  if(s.voiceEngine==="ai_server" && s.aiTtsUrl){
+    try{
+      const url=s.aiTtsUrl;
+      const res=await fetch(url,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({text, lang})
+      });
+      if(!res.ok) throw new Error("AI TTS server lỗi "+res.status);
+      const blob=await res.blob();
+      if(token !== v8SpeechToken) return;
+      const audioUrl=URL.createObjectURL(blob);
+      v8Audio=new Audio(audioUrl);
+      await new Promise(resolve=>{
+        v8Audio.onended=()=>{URL.revokeObjectURL(audioUrl); resolve();};
+        v8Audio.onerror=()=>{URL.revokeObjectURL(audioUrl); resolve();};
+        v8Audio.play().catch(()=>resolve());
+      });
+      return;
+    }catch(e){
+      console.warn(e);
+      // fallback to browser voice
+    }
+  }
+
+  return new Promise(resolve=>{
+    if(token !== v8SpeechToken){ resolve(); return; }
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=lang || "zh-CN";
+    const rate=parseFloat(document.getElementById("rateInput")?.value || settings().rate || "0.85");
+    u.rate=rate;
+    u.onend=()=>resolve();
+    u.onerror=()=>resolve();
+    speechSynthesis.speak(u);
+  });
+}
+
+async function readSeq(seq){
+  stopAllSpeech();
+  const localToken=v8SpeechToken;
+  const s=v7Settings();
+  for(const [text, lang] of seq){
+    if(localToken !== v8SpeechToken) return;
+    await speakText(text, lang, false);
+    if((s.readGap || 0)>0) await sleep(s.readGap);
+  }
+}
+
+function nextCard(){
+  if(!filtered.length)return;
+  stopAllSpeech(); autoReadBusy=false; clearAutoStudyTimer();
+  if(v7AutoTimer){ clearTimeout(v7AutoTimer); v7AutoTimer=null; }
+  idx=(idx+1)%filtered.length;
+  renderCard();
+}
+
+function prevCard(){
+  if(!filtered.length)return;
+  stopAllSpeech(); autoReadBusy=false; clearAutoStudyTimer();
+  if(v7AutoTimer){ clearTimeout(v7AutoTimer); v7AutoTimer=null; }
+  idx=(idx-1+filtered.length)%filtered.length;
+  renderCard();
+}
+
+function speakCurrent(lang){ 
+  const w=current(); if(!w) return; 
+  let text=w.hanzi;
+  if(lang==="vi-VN") text=w.vi;
+  if(lang==="en-US") text=w.en;
+  speakText(text, lang, true); 
+}
+
+async function studyStep(){
+  const w=current(); 
+  if(!w) return;
+  const s=v7Settings();
+
+  if(v7StudyStepState === 0){
+    setCardVisibility("front");
+    await readSeq(modeToSeq(s.frontReadMode,w));
+    v7StudyStepState = 1;
+    return;
+  }
+
+  if(v7StudyStepState === 1){
+    setCardVisibility("back");
+    await readSeq(modeToSeq(s.backReadMode,w));
+    v7StudyStepState = 2;
+    return;
+  }
+
+  nextCard();
+  v7StudyStepState = 0;
+}
+
+function toggleAutoStudy(){
+  v7AutoRunning = !v7AutoRunning;
+  updateAutoStudyButton();
+  if(v7AutoTimer){ clearTimeout(v7AutoTimer); v7AutoTimer=null; }
+  stopAllSpeech();
+
+  if(v7AutoRunning){
+    toast("Đã bật tự động học");
+    runAutoStudyLoop();
+  }else{
+    toast("Đã tắt tự động học");
+  }
+}
+
+async function runAutoStudyLoop(){
+  if(!v7AutoRunning || !filtered.length) return;
+  const s=v7Settings();
+  await studyStep();
+  if(!v7AutoRunning) return;
+  v7AutoTimer=setTimeout(runAutoStudyLoop, s.autoNextDelay || 3000);
+}
+
+function testVoice(){ 
+  const lang=document.getElementById("testVoiceLang")?.value || "zh-CN";
+  const text = lang==="vi-VN" ? "Xin chào, đây là giọng tiếng Việt." : lang==="en-US" ? "Hello, this is the English voice." : "生产进度怎么样？";
+  speakText(text, lang, true); 
+}
+
 
 initAuth();

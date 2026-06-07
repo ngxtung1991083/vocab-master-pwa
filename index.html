@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
-  <title>Vocab Master V7</title>
+  <title>Vocab Master V8</title>
 </head>
 <body>
   <section id="lockScreen" class="lock-screen">
@@ -26,7 +26,7 @@
         <input id="loginPass" type="password" placeholder="Mật khẩu">
         <button onclick="unlockApp()">Mở App</button>
       </div>
-      <p class="tiny">V7 Study Flow Pro · Front/Back Control</p>
+      <p class="tiny">V8 Voice & Control Fix</p>
     </div>
   </section>
 
@@ -34,7 +34,7 @@
     <header class="top">
       <div>
         <div class="app-title">Vocab Master</div>
-        <div class="app-subtitle">V7 Study Flow Pro</div>
+        <div class="app-subtitle">V8 Voice Fix</div>
       </div>
       <button class="ghost" onclick="lockApp()">Khóa</button>
     </header>
@@ -89,7 +89,7 @@
             <label><input id="frontShowEn" type="checkbox" onchange="saveDisplaySettings(); renderCard()"> Hiện English</label>
           </div>
           <label>Đọc khi ở mặt trước</label>
-          <select id="frontReadMode" onchange="saveDisplaySettings()">
+          <select id="frontReadMode">
             <option value="zh">Đọc Hán tự</option>
             <option value="pinyin">Đọc Pinyin</option>
             <option value="vi">Đọc Tiếng Việt</option>
@@ -98,6 +98,7 @@
             <option value="zh_en">Hán tự → English</option>
             <option value="none">Không đọc</option>
           </select>
+          <button class="success" onclick="confirmDisplaySettings('front')">Xác Nhận Mặt Trước</button>
         </div>
 
         <div class="card">
@@ -109,7 +110,7 @@
             <label><input id="backShowEn" type="checkbox" onchange="saveDisplaySettings(); renderCard()"> Hiện English</label>
           </div>
           <label>Đọc khi ở mặt sau</label>
-          <select id="backReadMode" onchange="saveDisplaySettings()">
+          <select id="backReadMode">
             <option value="vi">Đọc Tiếng Việt</option>
             <option value="en">Đọc English</option>
             <option value="zh">Đọc Hán tự</option>
@@ -118,6 +119,7 @@
             <option value="all">Hán tự → Tiếng Việt → English</option>
             <option value="none">Không đọc</option>
           </select>
+          <button class="success" onclick="confirmDisplaySettings('back')">Xác Nhận Mặt Sau</button>
         </div>
 
         <div class="card">
@@ -128,8 +130,15 @@
           </div>
 
           <label>Khoảng nghỉ giữa các ngôn ngữ</label>
-          <input id="readGap" type="range" min="300" max="2500" step="100" value="900" oninput="document.getElementById('readGapValue').textContent=this.value+' ms'; saveDisplaySettings()">
-          <div id="readGapValue">900 ms</div>
+          <input id="readGap" type="range" min="0" max="1000" step="50" value="0" oninput="document.getElementById('readGapValue').textContent=this.value+' ms'">
+          <div id="readGapValue">0 ms</div>
+
+          <label>Chế độ giọng đọc</label>
+          <select id="voiceEngine">
+            <option value="browser">Giọng iPhone / Trình duyệt</option>
+            <option value="ai_server">AI Voice Server giống app laptop</option>
+          </select>
+          <input id="aiTtsUrl" placeholder="AI TTS Server URL, ví dụ: http://192.168.1.10:8765/tts">
 
           <label>Thời gian tự chuyển bước</label>
           <select id="autoNextDelay" onchange="saveDisplaySettings()">
@@ -140,7 +149,8 @@
             <option value="8000">8 giây</option>
           </select>
 
-          <p class="tiny">Nút Học bài: lần 1 đọc/lật mặt trước → lần 2 hiện/đọc mặt sau → lần 3 sang từ mới.</p>
+          <button class="success" onclick="confirmDisplaySettings('study')">Xác Nhận Cài Đặt Học</button>
+          <p class="tiny">Nút Học bài: lần 1 đọc mặt trước → lần 2 hiện/đọc mặt sau → lần 3 sang từ mới.</p>
         </div>
 
         <div class="flash-card">

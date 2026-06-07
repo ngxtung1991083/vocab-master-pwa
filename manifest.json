@@ -1,7 +1,7 @@
 {
-  "name": "Vocab Master PWA Offline V7 Study Flow Pro",
+  "name": "Vocab Master PWA Offline V8 Voice Control Fix",
   "short_name": "Vocab Master",
-  "description": "Flashcard tiếng Trung offline, điều khiển riêng mặt trước/mặt sau, Học bài và Tự động",
+  "description": "Flashcard tiếng Trung offline, xác nhận cấu hình, đọc nhanh, AI voice server tùy chọn",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
