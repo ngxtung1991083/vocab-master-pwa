@@ -1,7 +1,12 @@
-VOCAB MASTER PWA OFFLINE V3 PROFESSIONAL
+VOCAB MASTER PWA OFFLINE V4 LEARNING PRO
 
-BAN V3 CO GI MOI?
-- Co mat khau khoa app nhu V2.
+BAN V4 CO GI MOI?
+- Co mat khau khoa app.
+- Tu dong doc khi sang tu moi.
+- Chon ngon ngu doc: Trung / Viet / English / Trung->Viet / Trung->English / ca 3.
+- Chon ngon ngu hien thi tren flashcard: Han tu / Pinyin / Tieng Viet / English.
+- Tu dong hien nghia hoac an nghia.
+- Tu dong sang tu tiep theo sau 2.5s / 4s / 6s / 8s.
 - Import JSON.
 - Import CSV.
 - Import Excel .xlsx truc tiep tren trinh duyet.
@@ -70,3 +75,29 @@ BACKUP QUAN TRONG
 Du lieu luu tren iPhone/Safari.
 Neu xoa du lieu website Safari, du lieu co the mat.
 Hay vao Quan Ly -> Export Backup de luu file backup vao iCloud Drive.
+
+
+========================================
+TINH NANG HOC MOI CUA V4
+========================================
+Trong tab Flashcard co phan "Hien thi & Tu doc":
+
+1. Chon noi dung hien thi:
+- Han tu
+- Pinyin
+- Tieng Viet
+- English
+
+2. Tu doc:
+- Bat "Tu doc khi sang tu moi"
+- Chon ngon ngu doc:
+  Trung
+  Viet
+  English
+  Trung -> Viet
+  Trung -> English
+  Trung -> Viet -> English
+
+3. Tu dong hoc:
+- Bat "Tu dong hien nghia" neu muon hien toan bo.
+- Chon "Thoi gian tu sang tu tiep theo" neu muon app tu chay.

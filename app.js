@@ -10,6 +10,8 @@ let idx = 0;
 let quizWords = [];
 let quizIdx = 0;
 let quizScore = 0;
+let autoNextTimer = null;
+let autoReadBusy = false;
 
 async function sha256(text){
   const enc = new TextEncoder().encode(text);
@@ -75,6 +77,59 @@ function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function dueToday(w){ return !w.nextReview || w.nextReview.slice(0,10) <= todayStr(); }
 function addDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString(); }
+
+function displaySettings(){
+  const s=settings();
+  return {
+    showHanzi: s.showHanzi !== false,
+    showPinyin: s.showPinyin !== false,
+    showVi: s.showVi !== false,
+    showEn: s.showEn === true,
+    autoRead: s.autoRead === true,
+    autoShowAnswer: s.autoShowAnswer === true,
+    readMode: s.readMode || "zh",
+    readGap: Number(s.readGap || 900),
+    autoNextDelay: Number(s.autoNextDelay || 0)
+  };
+}
+function applyDisplaySettings(){
+  const s=displaySettings();
+  const set=(id,val)=>{ const el=document.getElementById(id); if(el) el.checked=val; };
+  set("showHanzi", s.showHanzi);
+  set("showPinyin", s.showPinyin);
+  set("showVi", s.showVi);
+  set("showEn", s.showEn);
+  set("autoRead", s.autoRead);
+  set("autoShowAnswer", s.autoShowAnswer);
+  const readMode=document.getElementById("readMode"); if(readMode) readMode.value=s.readMode;
+  const readGap=document.getElementById("readGap"); if(readGap) readGap.value=s.readGap;
+  const readGapValue=document.getElementById("readGapValue"); if(readGapValue) readGapValue.textContent=s.readGap+" ms";
+  const autoNextDelay=document.getElementById("autoNextDelay"); if(autoNextDelay) autoNextDelay.value=String(s.autoNextDelay);
+}
+function saveDisplaySettings(){
+  const s=settings();
+  const get=(id)=>document.getElementById(id);
+  if(get("showHanzi")) s.showHanzi=get("showHanzi").checked;
+  if(get("showPinyin")) s.showPinyin=get("showPinyin").checked;
+  if(get("showVi")) s.showVi=get("showVi").checked;
+  if(get("showEn")) s.showEn=get("showEn").checked;
+  if(get("autoRead")) s.autoRead=get("autoRead").checked;
+  if(get("autoShowAnswer")) s.autoShowAnswer=get("autoShowAnswer").checked;
+  if(get("readMode")) s.readMode=get("readMode").value;
+  if(get("readGap")) s.readGap=Number(get("readGap").value);
+  if(get("autoNextDelay")) s.autoNextDelay=Number(get("autoNextDelay").value);
+  saveSettings(s);
+}
+function clearAutoNext(){
+  if(autoNextTimer){ clearTimeout(autoNextTimer); autoNextTimer=null; }
+}
+function scheduleAutoNext(){
+  clearAutoNext();
+  const s=displaySettings();
+  if(s.autoNextDelay>0 && filtered.length){
+    autoNextTimer=setTimeout(()=>nextCard(), s.autoNextDelay);
+  }
+}
 
 function go(name){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
@@ -167,19 +222,39 @@ function loadFlash(){
 }
 function current(){ return filtered[idx]; }
 function renderCard(){
+  clearAutoNext();
   const w=current();
+  const s=displaySettings();
   document.getElementById("counter").textContent=filtered.length?`${idx+1}/${filtered.length}`:"0/0";
   document.getElementById("fcHanzi").textContent=w?w.hanzi:"Không có từ phù hợp";
   document.getElementById("fcPinyin").textContent=w?(w.pinyin||""):"";
-  document.getElementById("fcMeaning").textContent=w?`${w.vi||""}${w.en?" / "+w.en:""}`:"";
+  document.getElementById("fcVi").textContent=w?(w.vi||""):"";
+  document.getElementById("fcEn").textContent=w?(w.en||""):"";
   document.getElementById("fcDeck").textContent=w?`Bộ: ${w.deck} | ${statusVi(w.status)} | Ôn: ${w.nextReview ? w.nextReview.slice(0,10) : "hôm nay"}`:"";
-  document.getElementById("fcPinyin").classList.add("hidden");
-  document.getElementById("fcMeaning").classList.add("hidden");
+
+  document.getElementById("fcHanzi").classList.toggle("hidden", !s.showHanzi);
+  document.getElementById("fcPinyin").classList.toggle("hidden", !s.showPinyin);
+  document.getElementById("fcVi").classList.toggle("hidden", !s.showVi);
+  document.getElementById("fcEn").classList.toggle("hidden", !s.showEn);
+
+  if(!s.autoShowAnswer){
+    document.getElementById("fcPinyin").classList.toggle("hidden", true);
+    document.getElementById("fcVi").classList.toggle("hidden", true);
+    document.getElementById("fcEn").classList.toggle("hidden", true);
+  }
+
+  if(w && s.autoRead) autoReadCurrent();
+  scheduleAutoNext();
 }
 function statusVi(s){ return s==="known"?"Đã thuộc":s==="unknown"?"Chưa thuộc":"Từ mới"; }
-function showAnswer(){ document.getElementById("fcPinyin").classList.remove("hidden"); document.getElementById("fcMeaning").classList.remove("hidden"); }
-function nextCard(){ if(!filtered.length)return; idx=(idx+1)%filtered.length; renderCard(); }
-function prevCard(){ if(!filtered.length)return; idx=(idx-1+filtered.length)%filtered.length; renderCard(); }
+function showAnswer(){ 
+  const s=displaySettings();
+  if(s.showPinyin) document.getElementById("fcPinyin").classList.remove("hidden"); 
+  if(s.showVi) document.getElementById("fcVi").classList.remove("hidden"); 
+  if(s.showEn) document.getElementById("fcEn").classList.remove("hidden"); 
+}
+function nextCard(){ if(!filtered.length)return; speechSynthesis.cancel(); autoReadBusy=false; idx=(idx+1)%filtered.length; renderCard(); }
+function prevCard(){ if(!filtered.length)return; speechSynthesis.cancel(); autoReadBusy=false; idx=(idx-1+filtered.length)%filtered.length; renderCard(); }
 
 function gradeCurrent(grade){
   const w=current(); if(!w) return;
@@ -201,16 +276,52 @@ function gradeCurrent(grade){
   saveWords(); nextCard();
 }
 
-function speakText(text, lang){
-  if(!text) return;
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang=lang || "zh-CN";
-  const rate=parseFloat(document.getElementById("rateInput")?.value || settings().rate || "0.85");
-  u.rate=rate;
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
+function speakText(text, lang, cancel=true){
+  return new Promise(resolve=>{
+    if(!text){ resolve(); return; }
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=lang || "zh-CN";
+    const rate=parseFloat(document.getElementById("rateInput")?.value || settings().rate || "0.85");
+    u.rate=rate;
+    u.onend=()=>resolve();
+    u.onerror=()=>resolve();
+    if(cancel) speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  });
 }
-function speakCurrent(lang){ const w=current(); if(w) speakText(lang==="vi-VN" ? w.vi : w.hanzi, lang); }
-function testVoice(){ speakText("生产进度怎么样？", "zh-CN"); }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function speakCurrent(lang){ 
+  const w=current(); if(!w) return; 
+  let text=w.hanzi;
+  if(lang==="vi-VN") text=w.vi;
+  if(lang==="en-US") text=w.en;
+  speakText(text, lang, true); 
+}
+async function autoReadCurrent(){
+  if(autoReadBusy) return;
+  const w=current(); if(!w) return;
+  autoReadBusy=true;
+  const s=displaySettings();
+  const gap=s.readGap || 900;
+  speechSynthesis.cancel();
+  const seq=[];
+  if(s.readMode==="zh") seq.push([w.hanzi,"zh-CN"]);
+  if(s.readMode==="vi") seq.push([w.vi,"vi-VN"]);
+  if(s.readMode==="en") seq.push([w.en,"en-US"]);
+  if(s.readMode==="zh_vi") seq.push([w.hanzi,"zh-CN"],[w.vi,"vi-VN"]);
+  if(s.readMode==="zh_en") seq.push([w.hanzi,"zh-CN"],[w.en,"en-US"]);
+  if(s.readMode==="all") seq.push([w.hanzi,"zh-CN"],[w.vi,"vi-VN"],[w.en,"en-US"]);
+  for(const [text, lang] of seq){
+    await speakText(text, lang, false);
+    await sleep(gap);
+  }
+  autoReadBusy=false;
+}
+function testVoice(){ 
+  const lang=document.getElementById("testVoiceLang")?.value || "zh-CN";
+  const text = lang==="vi-VN" ? "Xin chào, đây là giọng tiếng Việt." : lang==="en-US" ? "Hello, this is the English voice." : "生产进度怎么样？";
+  speakText(text, lang, true); 
+}
 
 function startQuiz(){
   const deck=document.getElementById("quizDeckFilter").value;
@@ -334,6 +445,7 @@ function escapeHtml(s){ return (s||"").toString().replace(/[&<>"']/g,m=>({"&":"&
 function initApp(){
   loadWordsLocal();
   const s=settings(); if(s.rate){ document.getElementById("rateInput").value=s.rate; document.getElementById("rateValue").textContent=s.rate; }
+  applyDisplaySettings();
   const a=getAuth(); if(document.getElementById("lockEnabled")) document.getElementById("lockEnabled").checked = a.lockEnabled !== false;
   updateStats(); refreshDecks(); renderWordList(); renderStats();
 }
