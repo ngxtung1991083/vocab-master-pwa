@@ -720,3 +720,225 @@ document.addEventListener("keydown",(e)=>{
 });
 document.getElementById("offlineStatus") && (document.getElementById("offlineStatus").textContent = navigator.onLine ? "Đang online. App sẽ tự lưu để dùng offline." : "Đang offline.");
 initAuth();
+
+
+/* ===== V7 STUDY FLOW OVERRIDES ===== */
+let v7StudyStepState = 0; // 0 front, 1 back, 2 next
+let v7AutoRunning = false;
+let v7AutoTimer = null;
+
+function v7Settings(){
+  const s=settings();
+  return {
+    frontShowHanzi: s.frontShowHanzi !== false,
+    frontShowPinyin: s.frontShowPinyin === true,
+    frontShowVi: s.frontShowVi === true,
+    frontShowEn: s.frontShowEn === true,
+    backShowHanzi: s.backShowHanzi !== false,
+    backShowPinyin: s.backShowPinyin !== false,
+    backShowVi: s.backShowVi !== false,
+    backShowEn: s.backShowEn === true,
+    frontReadMode: s.frontReadMode || "zh",
+    backReadMode: s.backReadMode || "vi",
+    autoRead: s.autoRead === true,
+    autoShowBack: s.autoShowBack === true,
+    readGap: Number(s.readGap || 900),
+    autoNextDelay: Number(s.autoNextDelay || 3000)
+  };
+}
+
+function applyDisplaySettings(){
+  const s=v7Settings();
+  const setCheck=(id,val)=>{ const el=document.getElementById(id); if(el) el.checked=val; };
+  const setVal=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=String(val); };
+
+  setCheck("frontShowHanzi",s.frontShowHanzi);
+  setCheck("frontShowPinyin",s.frontShowPinyin);
+  setCheck("frontShowVi",s.frontShowVi);
+  setCheck("frontShowEn",s.frontShowEn);
+  setCheck("backShowHanzi",s.backShowHanzi);
+  setCheck("backShowPinyin",s.backShowPinyin);
+  setCheck("backShowVi",s.backShowVi);
+  setCheck("backShowEn",s.backShowEn);
+  setCheck("autoRead",s.autoRead);
+  setCheck("autoShowBack",s.autoShowBack);
+  setVal("frontReadMode",s.frontReadMode);
+  setVal("backReadMode",s.backReadMode);
+  setVal("readGap",s.readGap);
+  setVal("autoNextDelay",s.autoNextDelay);
+  const rg=document.getElementById("readGapValue"); if(rg) rg.textContent=s.readGap+" ms";
+}
+
+function saveDisplaySettings(){
+  const old=settings();
+  const get=(id)=>document.getElementById(id);
+  const readCheck=(id, fallback)=>get(id)?get(id).checked:fallback;
+  const readVal=(id, fallback)=>get(id)?get(id).value:fallback;
+
+  old.frontShowHanzi=readCheck("frontShowHanzi",true);
+  old.frontShowPinyin=readCheck("frontShowPinyin",false);
+  old.frontShowVi=readCheck("frontShowVi",false);
+  old.frontShowEn=readCheck("frontShowEn",false);
+  old.backShowHanzi=readCheck("backShowHanzi",true);
+  old.backShowPinyin=readCheck("backShowPinyin",true);
+  old.backShowVi=readCheck("backShowVi",true);
+  old.backShowEn=readCheck("backShowEn",false);
+  old.frontReadMode=readVal("frontReadMode","zh");
+  old.backReadMode=readVal("backReadMode","vi");
+  old.autoRead=readCheck("autoRead",false);
+  old.autoShowBack=readCheck("autoShowBack",false);
+  old.readGap=Number(readVal("readGap",900));
+  old.autoNextDelay=Number(readVal("autoNextDelay",3000));
+  saveSettings(old);
+}
+
+function modeToSeq(mode, w){
+  if(!w || mode==="none") return [];
+  const pinyinText = w.pinyin ? w.pinyin : w.hanzi;
+  const map = {
+    zh: [[w.hanzi,"zh-CN"]],
+    pinyin: [[pinyinText,"zh-CN"]],
+    vi: [[w.vi,"vi-VN"]],
+    en: [[w.en,"en-US"]],
+    zh_vi: [[w.hanzi,"zh-CN"],[w.vi,"vi-VN"]],
+    zh_en: [[w.hanzi,"zh-CN"],[w.en,"en-US"]],
+    all: [[w.hanzi,"zh-CN"],[w.vi,"vi-VN"],[w.en,"en-US"]]
+  };
+  return (map[mode] || []).filter(x=>x[0]);
+}
+
+async function readSeq(seq){
+  const s=v7Settings();
+  speechSynthesis.cancel();
+  for(const [text, lang] of seq){
+    await speakText(text, lang, false);
+    await sleep(s.readGap || 900);
+  }
+}
+
+function setCardVisibility(side){
+  const s=v7Settings();
+  const front = side === "front";
+  const vh = front ? s.frontShowHanzi : s.backShowHanzi;
+  const vp = front ? s.frontShowPinyin : s.backShowPinyin;
+  const vv = front ? s.frontShowVi : s.backShowVi;
+  const ve = front ? s.frontShowEn : s.backShowEn;
+
+  const h=document.getElementById("fcHanzi");
+  const p=document.getElementById("fcPinyin");
+  const vi=document.getElementById("fcVi");
+  const en=document.getElementById("fcEn");
+  if(h) h.classList.toggle("hidden", !vh);
+  if(p) p.classList.toggle("hidden", !vp);
+  if(vi) vi.classList.toggle("hidden", !vv);
+  if(en) en.classList.toggle("hidden", !ve);
+  cardSide=side;
+}
+
+function renderCard(){
+  clearAutoNext();
+  clearAutoStudyTimer();
+  if(v7AutoTimer){ clearTimeout(v7AutoTimer); v7AutoTimer=null; }
+  const w=current();
+  const s=v7Settings();
+  v7StudyStepState = s.autoShowBack ? 1 : 0;
+  cardSide = s.autoShowBack ? "back" : "front";
+
+  document.getElementById("counter").textContent=filtered.length?`${idx+1}/${filtered.length}`:"0/0";
+  document.getElementById("fcHanzi").textContent=w?w.hanzi:"Không có từ phù hợp";
+  document.getElementById("fcPinyin").textContent=w?(w.pinyin||""):"";
+  document.getElementById("fcVi").textContent=w?(w.vi||""):"";
+  document.getElementById("fcEn").textContent=w?(w.en||""):"";
+  document.getElementById("fcDeck").textContent=w?`Bộ: ${w.deck} | ${statusVi(w.status)} | Ôn: ${w.nextReview ? w.nextReview.slice(0,10) : "hôm nay"}`:"";
+  setCardVisibility(cardSide);
+
+  if(w && s.autoRead && !v7AutoRunning){
+    const mode = cardSide === "front" ? s.frontReadMode : s.backReadMode;
+    readSeq(modeToSeq(mode,w));
+  }
+  updateAutoStudyButton();
+}
+
+function showAnswer(){
+  setCardVisibility("back");
+  v7StudyStepState = 2;
+}
+
+async function studyStep(){
+  const w=current(); 
+  if(!w) return;
+  const s=v7Settings();
+
+  if(v7StudyStepState === 0){
+    setCardVisibility("front");
+    await readSeq(modeToSeq(s.frontReadMode,w));
+    v7StudyStepState = 1;
+    return;
+  }
+
+  if(v7StudyStepState === 1){
+    setCardVisibility("back");
+    await readSeq(modeToSeq(s.backReadMode,w));
+    v7StudyStepState = 2;
+    return;
+  }
+
+  nextCard();
+  v7StudyStepState = 0;
+}
+
+function nextCard(){
+  if(!filtered.length)return;
+  speechSynthesis.cancel(); autoReadBusy=false; clearAutoStudyTimer();
+  if(v7AutoTimer){ clearTimeout(v7AutoTimer); v7AutoTimer=null; }
+  idx=(idx+1)%filtered.length;
+  renderCard();
+}
+
+function prevCard(){
+  if(!filtered.length)return;
+  speechSynthesis.cancel(); autoReadBusy=false; clearAutoStudyTimer();
+  if(v7AutoTimer){ clearTimeout(v7AutoTimer); v7AutoTimer=null; }
+  idx=(idx-1+filtered.length)%filtered.length;
+  renderCard();
+}
+
+function updateAutoStudyButton(){
+  const btn=document.getElementById("autoStudyBtn");
+  if(!btn) return;
+  btn.textContent = v7AutoRunning ? "⏸ Tắt tự động" : "▶ Tự động";
+  btn.classList.toggle("auto-on", v7AutoRunning);
+}
+
+function toggleAutoStudy(){
+  v7AutoRunning = !v7AutoRunning;
+  updateAutoStudyButton();
+  if(v7AutoTimer){ clearTimeout(v7AutoTimer); v7AutoTimer=null; }
+  speechSynthesis.cancel();
+
+  if(v7AutoRunning){
+    toast("Đã bật tự động học");
+    runAutoStudyLoop();
+  }else{
+    toast("Đã tắt tự động học");
+  }
+}
+
+async function runAutoStudyLoop(){
+  if(!v7AutoRunning || !filtered.length) return;
+  const s=v7Settings();
+  await studyStep();
+  if(!v7AutoRunning) return;
+  v7AutoTimer=setTimeout(runAutoStudyLoop, s.autoNextDelay || 3000);
+}
+
+function speakCurrent(lang){ 
+  const w=current(); if(!w) return; 
+  let text=w.hanzi;
+  if(lang==="vi-VN") text=w.vi;
+  if(lang==="en-US") text=w.en;
+  speakText(text, lang, true); 
+}
+
+
+initAuth();

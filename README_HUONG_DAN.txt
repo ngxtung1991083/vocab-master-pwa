@@ -1,4 +1,4 @@
-VOCAB MASTER PWA OFFLINE V6 CLOUD SYNC
+VOCAB MASTER PWA OFFLINE V7 STUDY FLOW PRO
 
 BAN V4 CO GI MOI?
 - Co mat khau khoa app.
@@ -179,3 +179,30 @@ LUU Y BAO MAT:
 - Khong chia se token cho nguoi khac.
 - Neu lo token, xoa token tren GitHub ngay.
 - Voi PWA tinh, day la giai phap thuc dung mien phi, khong phai he thong bao mat doanh nghiep.
+
+
+========================================
+V7 SUA LOI HOC BAI / TU DONG
+========================================
+1. Nut "Hoc bai":
+- Lan 1: hien/doc mat truoc.
+- Lan 2: hien/doc mat sau.
+- Lan 3: sang tu moi.
+- Sau do lap lai chu ky.
+
+2. Nut "Tu dong":
+- Tu chay chu ky Hoc bai.
+- Tu doc mat truoc.
+- Tu lat sang mat sau.
+- Tu doc mat sau.
+- Tu sang tu moi.
+- Co the chinh toc do o muc "Thoi gian tu chuyen buoc".
+
+3. Lua chon rieng cho tung mat flashcard:
+Mat truoc:
+- Chon hien Han tu / Pinyin / Tieng Viet / English.
+- Chon doc Han tu / Pinyin / Tieng Viet / English / Han tu -> Viet / Han tu -> English.
+
+Mat sau:
+- Chon hien Han tu / Pinyin / Tieng Viet / English.
+- Chon doc Tieng Viet / English / Han tu / Han tu -> Viet / Han tu -> English / ca 3.

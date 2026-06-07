@@ -1,4 +1,4 @@
-const CACHE_NAME = "vocab-master-pwa-v6-cloud-sync";
+const CACHE_NAME = "vocab-master-pwa-v7-study-flow-pro";
 const ASSETS = [
   "./",
   "./index.html",

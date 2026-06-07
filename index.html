@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
-  <title>Vocab Master V6</title>
+  <title>Vocab Master V7</title>
 </head>
 <body>
   <section id="lockScreen" class="lock-screen">
@@ -26,7 +26,7 @@
         <input id="loginPass" type="password" placeholder="Mật khẩu">
         <button onclick="unlockApp()">Mở App</button>
       </div>
-      <p class="tiny">V6 Cloud Sync · GitHub Backup</p>
+      <p class="tiny">V7 Study Flow Pro · Front/Back Control</p>
     </div>
   </section>
 
@@ -34,7 +34,7 @@
     <header class="top">
       <div>
         <div class="app-title">Vocab Master</div>
-        <div class="app-subtitle">V6 Cloud Sync</div>
+        <div class="app-subtitle">V7 Study Flow Pro</div>
       </div>
       <button class="ghost" onclick="lockApp()">Khóa</button>
     </header>
@@ -81,48 +81,66 @@
         </div>
 
         <div class="card">
-          <h2>Hiển thị & Tự đọc</h2>
+          <h2>Mặt trước Flashcard</h2>
           <div class="check-grid">
-            <label><input id="showHanzi" type="checkbox" checked onchange="saveDisplaySettings(); renderCard()"> Hán tự</label>
-            <label><input id="showPinyin" type="checkbox" checked onchange="saveDisplaySettings(); renderCard()"> Pinyin</label>
-            <label><input id="showVi" type="checkbox" checked onchange="saveDisplaySettings(); renderCard()"> Tiếng Việt</label>
-            <label><input id="showEn" type="checkbox" onchange="saveDisplaySettings(); renderCard()"> English</label>
+            <label><input id="frontShowHanzi" type="checkbox" checked onchange="saveDisplaySettings(); renderCard()"> Hiện Hán tự</label>
+            <label><input id="frontShowPinyin" type="checkbox" onchange="saveDisplaySettings(); renderCard()"> Hiện Pinyin</label>
+            <label><input id="frontShowVi" type="checkbox" onchange="saveDisplaySettings(); renderCard()"> Hiện Tiếng Việt</label>
+            <label><input id="frontShowEn" type="checkbox" onchange="saveDisplaySettings(); renderCard()"> Hiện English</label>
           </div>
-
-          <div class="check-grid">
-            <label><input id="autoRead" type="checkbox" onchange="saveDisplaySettings()"> Tự đọc khi sang từ mới</label>
-            <label><input id="autoShowAnswer" type="checkbox" onchange="saveDisplaySettings()"> Tự hiện nghĩa</label>
-          </div>
-
-          <label>Ngôn ngữ đọc tự động</label>
-          <select id="readMode" onchange="saveDisplaySettings()">
-            <option value="zh">Chỉ đọc tiếng Trung</option>
-            <option value="vi">Chỉ đọc tiếng Việt</option>
-            <option value="en">Chỉ đọc English</option>
-            <option value="zh_vi">Trung → Việt</option>
-            <option value="zh_en">Trung → English</option>
-            <option value="all">Trung → Việt → English</option>
+          <label>Đọc khi ở mặt trước</label>
+          <select id="frontReadMode" onchange="saveDisplaySettings()">
+            <option value="zh">Đọc Hán tự</option>
+            <option value="pinyin">Đọc Pinyin</option>
+            <option value="vi">Đọc Tiếng Việt</option>
+            <option value="en">Đọc English</option>
+            <option value="zh_vi">Hán tự → Tiếng Việt</option>
+            <option value="zh_en">Hán tự → English</option>
+            <option value="none">Không đọc</option>
           </select>
+        </div>
+
+        <div class="card">
+          <h2>Mặt sau Flashcard</h2>
+          <div class="check-grid">
+            <label><input id="backShowHanzi" type="checkbox" checked onchange="saveDisplaySettings(); renderCard()"> Hiện Hán tự</label>
+            <label><input id="backShowPinyin" type="checkbox" checked onchange="saveDisplaySettings(); renderCard()"> Hiện Pinyin</label>
+            <label><input id="backShowVi" type="checkbox" checked onchange="saveDisplaySettings(); renderCard()"> Hiện Tiếng Việt</label>
+            <label><input id="backShowEn" type="checkbox" onchange="saveDisplaySettings(); renderCard()"> Hiện English</label>
+          </div>
+          <label>Đọc khi ở mặt sau</label>
+          <select id="backReadMode" onchange="saveDisplaySettings()">
+            <option value="vi">Đọc Tiếng Việt</option>
+            <option value="en">Đọc English</option>
+            <option value="zh">Đọc Hán tự</option>
+            <option value="zh_vi">Hán tự → Tiếng Việt</option>
+            <option value="zh_en">Hán tự → English</option>
+            <option value="all">Hán tự → Tiếng Việt → English</option>
+            <option value="none">Không đọc</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <h2>Học bài & Tự động</h2>
+          <div class="check-grid">
+            <label><input id="autoRead" type="checkbox" onchange="saveDisplaySettings()"> Tự đọc khi sang thẻ</label>
+            <label><input id="autoShowBack" type="checkbox" onchange="saveDisplaySettings()"> Vào thẳng mặt sau</label>
+          </div>
 
           <label>Khoảng nghỉ giữa các ngôn ngữ</label>
           <input id="readGap" type="range" min="300" max="2500" step="100" value="900" oninput="document.getElementById('readGapValue').textContent=this.value+' ms'; saveDisplaySettings()">
           <div id="readGapValue">900 ms</div>
 
-          <label>Thời gian tự sang từ tiếp theo</label>
+          <label>Thời gian tự chuyển bước</label>
           <select id="autoNextDelay" onchange="saveDisplaySettings()">
-            <option value="0">Tắt tự sang từ</option>
-            <option value="2500">2.5 giây</option>
+            <option value="2000">2 giây</option>
+            <option value="3000">3 giây</option>
             <option value="4000">4 giây</option>
             <option value="6000">6 giây</option>
             <option value="8000">8 giây</option>
           </select>
 
-          <label>Chế độ nút Học bài</label>
-          <select id="studyReadMode" onchange="saveDisplaySettings()">
-            <option value="front_then_back">Lần 1 đọc mặt trước, lần 2 lật mặt sau và đọc nghĩa</option>
-            <option value="read_visible">Đọc nội dung đang hiện</option>
-            <option value="flip_only">Chỉ lật thẻ, không tự đọc</option>
-          </select>
+          <p class="tiny">Nút Học bài: lần 1 đọc/lật mặt trước → lần 2 hiện/đọc mặt sau → lần 3 sang từ mới.</p>
         </div>
 
         <div class="flash-card">

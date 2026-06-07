@@ -1,7 +1,7 @@
 {
-  "name": "Vocab Master PWA Offline V6 Cloud Sync",
+  "name": "Vocab Master PWA Offline V7 Study Flow Pro",
   "short_name": "Vocab Master",
-  "description": "Flashcard tiếng Trung offline, có GitHub Cloud Sync miễn phí",
+  "description": "Flashcard tiếng Trung offline, điều khiển riêng mặt trước/mặt sau, Học bài và Tự động",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
