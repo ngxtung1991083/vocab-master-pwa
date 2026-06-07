@@ -1,7 +1,7 @@
 {
-  "name": "Vocab Master PWA Offline V2",
+  "name": "Vocab Master PWA Offline V3 Professional",
   "short_name": "Vocab Master",
-  "description": "Flashcard tiếng Trung chạy offline trên iPhone, có khóa mật khẩu",
+  "description": "Flashcard tiếng Trung offline cho iPhone, có Excel import và SRS",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

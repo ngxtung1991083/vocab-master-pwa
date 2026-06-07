@@ -1,123 +1,72 @@
-VOCAB MASTER PWA OFFLINE V2 - CO KHOA MAT KHAU
+VOCAB MASTER PWA OFFLINE V3 PROFESSIONAL
 
-BAN V2 CO GI MOI?
-- Them man hinh khoa bang mat khau.
-- Lan dau mo app, ban tao mat khau rieng.
-- Nhung lan sau phai nhap mat khau moi vao duoc app.
-- Co nut doi mat khau.
-- Co tuy chon bat/tat khoa app.
-- Du lieu tu vung van luu tren iPhone cua ban.
-- App van chay offline sau khi cai vao man hinh chinh.
+BAN V3 CO GI MOI?
+- Co mat khau khoa app nhu V2.
+- Import JSON.
+- Import CSV.
+- Import Excel .xlsx truc tiep tren trinh duyet.
+- Quan ly nhieu bo tu vung.
+- Flashcard theo bo tu vung va trang thai.
+- Luyen thi.
+- SRS on tap: Tu can on hom nay / tu da thuoc / tu chua thuoc / tu moi.
+- Thong ke hoc tap.
+- Backup / Restore JSON.
+- Chay offline tren iPhone sau khi cai vao man hinh chinh.
+- Khong can VPS.
+- Khong can mo may tinh 24/24.
+- Khong can App Store.
 
-LUU Y BAO MAT RAT QUAN TRONG:
-- Day la PWA tinh, nen khong phai bao mat tuyet doi nhu app server chuyen nghiep.
-- Mat khau giup chan nguoi binh thuong, nguoi muon mo app tren may ban, hoac nguoi co link nhung khong biet mat khau.
-- Neu nguoi co ky thuat cao va co link GitHub Pages, ho van co the xem ma nguon app.
-- Tu vung ban import sau nay khong nam tren GitHub, no luu trong iPhone cua ban.
+LUU Y VE IMPORT EXCEL:
+File Excel nen co cac cot:
+- Hán tự
+- Pinyin
+- Tiếng Việt
+- English
+- Deck
 
-========================================
-1. DUNG THU TREN MAY TINH
-========================================
-- Giai nen ZIP.
-- Mo file index.html bang Chrome/Edge de test nhanh.
-- Mot so tinh nang offline/PWA chi hoat dong day du khi dua len HTTPS.
+Neu khong co cot Deck, app se dua vao bo "Imported".
 
-========================================
-2. DUA LEN GITHUB PAGES MIEN PHI
-========================================
-BUOC 1: Vao github.com va dang nhap.
-
-BUOC 2: Tao repository moi:
-- New repository
-- Ten vi du: vocab-master-pwa
-- Public
-- Create repository
-
-BUOC 3: Upload tat ca file trong thu muc nay:
-- index.html
-- style.css
-- app.js
-- manifest.json
-- sw.js
-- sample_vocab.json
-- icons/
-
-BUOC 4: Bat GitHub Pages:
-- Settings
-- Pages
-- Source: Deploy from a branch
-- Branch: main
-- Folder: /root
-- Save
-
-BUOC 5: Lay link dang:
-https://ten-github-cua-ban.github.io/vocab-master-pwa/
+Ten cot chap nhan:
+Hán tự / Hanzi / Chinese / 中文 / 汉字
+Pinyin / 拼音
+Tiếng Việt / Vietnamese / Viet / Nghĩa
+English / EN / Tiếng Anh
+Deck / Bộ / Bộ từ vựng / List
 
 ========================================
-3. CAI LEN IPHONE
+CAI LEN GITHUB PAGES
 ========================================
-- Mo link bang Safari tren iPhone.
-- Bam Chia se.
-- Chon Them vao Man hinh chinh.
-- Bam Them.
-- Mo icon Vocab Master ngoai man hinh.
+1. Giai nen ZIP.
+2. Upload tat ca file va thu muc len repository GitHub Pages:
+   - index.html
+   - app.js
+   - style.css
+   - manifest.json
+   - sw.js
+   - xlsx.full.min.js
+   - sample_vocab.json
+   - sample_vocab.csv
+   - icons/
+3. Vao Settings -> Pages.
+4. Source: Deploy from a branch.
+5. Branch: main.
+6. Folder: /(root).
+7. Save.
+8. Mo link GitHub Pages bang Safari tren iPhone.
+9. Chia se -> Them vao Man hinh chinh.
 
 ========================================
-4. LAN DAU MO APP
+CAP NHAT TU V2 LEN V3
 ========================================
-- App se yeu cau tao mat khau.
-- Nhap mat khau 2 lan.
-- Bam Tao Mat Khau.
-- Sau do moi vao app.
+Neu ban da upload V2 len GitHub:
+- Upload de tat ca file V3 len repository cu.
+- GitHub se tu deploy lai.
+- Tren iPhone neu app chua cap nhat, dong app va mo lai.
+- Neu van chua cap nhat, mo Safari vao link, refresh 2-3 lan.
 
 ========================================
-5. IMPORT TU VUNG
+BACKUP QUAN TRONG
 ========================================
-Ban V2 ho tro import JSON.
-
-Dinh dang:
-[
-  {
-    "hanzi": "生产",
-    "pinyin": "shēngchǎn",
-    "vi": "sản xuất",
-    "en": "production",
-    "deck": "Công xưởng"
-  }
-]
-
-Trong ZIP co san sample_vocab.json.
-
-========================================
-6. BACKUP
-========================================
-- Vao Quan Ly.
-- Bam Export Backup JSON.
-- Luu file vao iCloud Drive.
-- Khi doi dien thoai, import lai file backup.
-
-========================================
-7. DOI MAT KHAU
-========================================
-- Vao Cai Dat.
-- Nhap mat khau cu.
-- Nhap mat khau moi.
-- Bam Doi Mat Khau.
-
-========================================
-8. NEU QUEN MAT KHAU
-========================================
-Cach don gian:
-- Xoa du lieu website tren Safari.
-- Hoac upload lai ban moi.
-- Luu y: neu xoa du lieu website, tu vung luu trong app co the mat.
-- Nen Export Backup thuong xuyen.
-
-========================================
-9. CAI DAT GIONG DOC IPHONE
-========================================
-- Vao Cai dat iPhone.
-- Tro nang.
-- Noi dung duoc doc.
-- Giong noi.
-- Tai them giong Trung Quoc / Tieng Viet neu can.
+Du lieu luu tren iPhone/Safari.
+Neu xoa du lieu website Safari, du lieu co the mat.
+Hay vao Quan Ly -> Export Backup de luu file backup vao iCloud Drive.
