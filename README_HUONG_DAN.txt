@@ -1,4 +1,4 @@
-VOCAB MASTER PWA OFFLINE V4 LEARNING PRO
+VOCAB MASTER PWA OFFLINE V5 LEARNING AUTO PRO
 
 BAN V4 CO GI MOI?
 - Co mat khau khoa app.
@@ -101,3 +101,26 @@ Trong tab Flashcard co phan "Hien thi & Tu doc":
 3. Tu dong hoc:
 - Bat "Tu dong hien nghia" neu muon hien toan bo.
 - Chon "Thoi gian tu sang tu tiep theo" neu muon app tu chay.
+
+
+========================================
+V5 SUA LOI VA NANG CAP
+========================================
+1. Sua loi import Excel:
+- App se thu tai thu vien SheetJS khi co internet.
+- Neu iPhone dang offline va thieu thu vien, hay luu file Excel thanh CSV roi import.
+- File CSV van hoat dong rat nhe va on dinh.
+
+2. Them nut "Hoc bai":
+- Lan 1: doc mat truoc.
+- Sau do tu lat mat sau va doc nghia theo ngon ngu ban chon.
+- Lan tiep theo: sang tu moi.
+
+3. Them nut "Tu dong":
+- Bat/tat che do tu dong hoc.
+- App tu doc, tu lat mat sau, tu sang tu tiep theo.
+- Co the chinh thoi gian o phan "Thoi gian tu sang tu tiep theo".
+
+4. Phim tat tren may tinh:
+- H: Hoc bai
+- A: Bat/tat Tu dong

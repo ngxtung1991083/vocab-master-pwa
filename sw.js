@@ -1,4 +1,4 @@
-const CACHE_NAME = "vocab-master-pwa-v4-learning-pro";
+const CACHE_NAME = "vocab-master-pwa-v5-learning-auto-pro";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS = [
   "./manifest.json",
   "./sample_vocab.json",
   "./sample_vocab.csv",
+  "./sample_vocab.xlsx",
   "./xlsx.full.min.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png"

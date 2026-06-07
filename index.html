@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
-  <title>Vocab Master V4</title>
+  <title>Vocab Master V5</title>
 </head>
 <body>
   <section id="lockScreen" class="lock-screen">
@@ -26,7 +26,7 @@
         <input id="loginPass" type="password" placeholder="Mật khẩu">
         <button onclick="unlockApp()">Mở App</button>
       </div>
-      <p class="tiny">V4 Learning Pro · Auto Read · Display Options</p>
+      <p class="tiny">V5 Learning Auto Pro · Excel Fix · Học bài</p>
     </div>
   </section>
 
@@ -34,7 +34,7 @@
     <header class="top">
       <div>
         <div class="app-title">Vocab Master</div>
-        <div class="app-subtitle">V4 Learning Pro</div>
+        <div class="app-subtitle">V5 Learning Auto Pro</div>
       </div>
       <button class="ghost" onclick="lockApp()">Khóa</button>
     </header>
@@ -116,6 +116,13 @@
             <option value="6000">6 giây</option>
             <option value="8000">8 giây</option>
           </select>
+
+          <label>Chế độ nút Học bài</label>
+          <select id="studyReadMode" onchange="saveDisplaySettings()">
+            <option value="front_then_back">Lần 1 đọc mặt trước, lần 2 lật mặt sau và đọc nghĩa</option>
+            <option value="read_visible">Đọc nội dung đang hiện</option>
+            <option value="flip_only">Chỉ lật thẻ, không tự đọc</option>
+          </select>
         </div>
 
         <div class="flash-card">
@@ -132,6 +139,10 @@
           <button onclick="speakCurrent('vi-VN')">🔊 Việt</button>
           <button onclick="speakCurrent('en-US')">🔊 EN</button>
           <button onclick="showAnswer()">Xem nghĩa</button>
+        </div>
+        <div class="grid2">
+          <button class="study-btn" onclick="studyStep()">📖 Học bài</button>
+          <button id="autoStudyBtn" class="warn" onclick="toggleAutoStudy()">▶ Tự động</button>
         </div>
         <div class="grid3">
           <button class="danger" onclick="gradeCurrent('again')">Quên</button>
@@ -254,6 +265,18 @@
 
   <div id="toast"></div>
   <script src="xlsx.full.min.js"></script>
+  <script>
+    window.__loadSheetJS = function(){
+      return new Promise(function(resolve){
+        if(window.XLSX && window.XLSX.read && !String(window.XLSX.read).includes("Thiếu thư viện")) return resolve(true);
+        var s=document.createElement("script");
+        s.src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+        s.onload=function(){resolve(true)};
+        s.onerror=function(){resolve(false)};
+        document.head.appendChild(s);
+      });
+    };
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

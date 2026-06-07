@@ -12,6 +12,9 @@ let quizIdx = 0;
 let quizScore = 0;
 let autoNextTimer = null;
 let autoReadBusy = false;
+let cardSide = 'front';
+let autoStudyOn = false;
+let autoStudyTimer = null;
 
 async function sha256(text){
   const enc = new TextEncoder().encode(text);
@@ -89,7 +92,8 @@ function displaySettings(){
     autoShowAnswer: s.autoShowAnswer === true,
     readMode: s.readMode || "zh",
     readGap: Number(s.readGap || 900),
-    autoNextDelay: Number(s.autoNextDelay || 0)
+    autoNextDelay: Number(s.autoNextDelay || 0),
+    studyReadMode: s.studyReadMode || "front_then_back"
   };
 }
 function applyDisplaySettings(){
@@ -105,6 +109,7 @@ function applyDisplaySettings(){
   const readGap=document.getElementById("readGap"); if(readGap) readGap.value=s.readGap;
   const readGapValue=document.getElementById("readGapValue"); if(readGapValue) readGapValue.textContent=s.readGap+" ms";
   const autoNextDelay=document.getElementById("autoNextDelay"); if(autoNextDelay) autoNextDelay.value=String(s.autoNextDelay);
+  const studyReadMode=document.getElementById("studyReadMode"); if(studyReadMode) studyReadMode.value=s.studyReadMode;
 }
 function saveDisplaySettings(){
   const s=settings();
@@ -118,10 +123,14 @@ function saveDisplaySettings(){
   if(get("readMode")) s.readMode=get("readMode").value;
   if(get("readGap")) s.readGap=Number(get("readGap").value);
   if(get("autoNextDelay")) s.autoNextDelay=Number(get("autoNextDelay").value);
+  if(get("studyReadMode")) s.studyReadMode=get("studyReadMode").value;
   saveSettings(s);
 }
 function clearAutoNext(){
   if(autoNextTimer){ clearTimeout(autoNextTimer); autoNextTimer=null; }
+}
+function clearAutoStudyTimer(){
+  if(autoStudyTimer){ clearTimeout(autoStudyTimer); autoStudyTimer=null; }
 }
 function scheduleAutoNext(){
   clearAutoNext();
@@ -223,6 +232,8 @@ function loadFlash(){
 function current(){ return filtered[idx]; }
 function renderCard(){
   clearAutoNext();
+  clearAutoStudyTimer();
+  cardSide='front';
   const w=current();
   const s=displaySettings();
   document.getElementById("counter").textContent=filtered.length?`${idx+1}/${filtered.length}`:"0/0";
@@ -241,10 +252,13 @@ function renderCard(){
     document.getElementById("fcPinyin").classList.toggle("hidden", true);
     document.getElementById("fcVi").classList.toggle("hidden", true);
     document.getElementById("fcEn").classList.toggle("hidden", true);
+  }else{
+    cardSide='back';
   }
 
-  if(w && s.autoRead) autoReadCurrent();
-  scheduleAutoNext();
+  if(w && s.autoRead && !autoStudyOn) autoReadCurrent();
+  if(!autoStudyOn) scheduleAutoNext();
+  if(autoStudyOn) scheduleAutoStudyStep();
 }
 function statusVi(s){ return s==="known"?"Đã thuộc":s==="unknown"?"Chưa thuộc":"Từ mới"; }
 function showAnswer(){ 
@@ -252,9 +266,93 @@ function showAnswer(){
   if(s.showPinyin) document.getElementById("fcPinyin").classList.remove("hidden"); 
   if(s.showVi) document.getElementById("fcVi").classList.remove("hidden"); 
   if(s.showEn) document.getElementById("fcEn").classList.remove("hidden"); 
+  cardSide='back';
 }
-function nextCard(){ if(!filtered.length)return; speechSynthesis.cancel(); autoReadBusy=false; idx=(idx+1)%filtered.length; renderCard(); }
-function prevCard(){ if(!filtered.length)return; speechSynthesis.cancel(); autoReadBusy=false; idx=(idx-1+filtered.length)%filtered.length; renderCard(); }
+function nextCard(){ if(!filtered.length)return; speechSynthesis.cancel(); autoReadBusy=false; clearAutoStudyTimer(); idx=(idx+1)%filtered.length; renderCard(); }
+function prevCard(){ if(!filtered.length)return; speechSynthesis.cancel(); autoReadBusy=false; clearAutoStudyTimer(); idx=(idx-1+filtered.length)%filtered.length; renderCard(); }
+
+
+function visibleTextsForRead(){
+  const w=current(); if(!w) return [];
+  const s=displaySettings();
+  const seq=[];
+  if(cardSide==="front"){
+    if(s.showHanzi) seq.push([w.hanzi,"zh-CN"]);
+  }else{
+    if(s.showHanzi) seq.push([w.hanzi,"zh-CN"]);
+    if(s.showVi) seq.push([w.vi,"vi-VN"]);
+    if(s.showEn) seq.push([w.en,"en-US"]);
+  }
+  return seq.filter(x=>x[0]);
+}
+async function readVisible(){
+  const s=displaySettings();
+  speechSynthesis.cancel();
+  for(const [text, lang] of visibleTextsForRead()){
+    await speakText(text, lang, false);
+    await sleep(s.readGap || 900);
+  }
+}
+async function studyStep(){
+  const w=current(); if(!w) return;
+  clearAutoNext();
+  clearAutoStudyTimer();
+  const s=displaySettings();
+  if(s.studyReadMode==="flip_only"){
+    if(cardSide==="front") showAnswer();
+    else nextCard();
+    return;
+  }
+  if(s.studyReadMode==="read_visible"){
+    await readVisible();
+    return;
+  }
+  // front_then_back: first press reads front; second press flips to back and reads selected back languages; third press moves next.
+  if(cardSide==="front"){
+    await speakText(w.hanzi, "zh-CN", true);
+    showAnswer();
+    await sleep(s.readGap || 900);
+    const seq=[];
+    if(s.showVi) seq.push([w.vi,"vi-VN"]);
+    if(s.showEn) seq.push([w.en,"en-US"]);
+    if(!seq.length && s.showPinyin) seq.push([w.pinyin,"zh-CN"]);
+    for(const [text, lang] of seq){
+      await speakText(text, lang, false);
+      await sleep(s.readGap || 900);
+    }
+  }else{
+    nextCard();
+  }
+}
+function updateAutoStudyButton(){
+  const btn=document.getElementById("autoStudyBtn");
+  if(!btn) return;
+  btn.textContent = autoStudyOn ? "⏸ Tắt tự động" : "▶ Tự động";
+  btn.classList.toggle("auto-on", autoStudyOn);
+}
+function toggleAutoStudy(){
+  autoStudyOn = !autoStudyOn;
+  updateAutoStudyButton();
+  clearAutoNext();
+  clearAutoStudyTimer();
+  if(autoStudyOn){
+    toast("Đã bật tự động học");
+    scheduleAutoStudyStep(300);
+  }else{
+    toast("Đã tắt tự động học");
+    speechSynthesis.cancel();
+  }
+}
+function scheduleAutoStudyStep(ms){
+  clearAutoStudyTimer();
+  if(!autoStudyOn || !filtered.length) return;
+  const s=displaySettings();
+  const delay = ms || (cardSide==="front" ? 500 : (s.autoNextDelay || 4000));
+  autoStudyTimer=setTimeout(async ()=>{
+    await studyStep();
+    if(autoStudyOn) scheduleAutoStudyStep(s.autoNextDelay || 4000);
+  }, delay);
+}
 
 function gradeCurrent(grade){
   const w=current(); if(!w) return;
@@ -371,6 +469,10 @@ async function importFile(){
       const rows=parseCSV(text);
       imported=rowsToWords(rows, defaultDeck);
     }else if(name.endsWith(".xlsx") || name.endsWith(".xls")){
+      if(window.__loadSheetJS) await window.__loadSheetJS();
+      if(!window.XLSX || !window.XLSX.read || String(window.XLSX.read).includes("Thiếu thư viện")){
+        throw new Error("Thiếu thư viện đọc Excel. Cách nhanh nhất: lưu Excel thành CSV rồi import, hoặc upload file xlsx.full.min.js chuẩn của SheetJS.");
+      }
       const buf=await file.arrayBuffer();
       const wb=XLSX.read(buf, {type:"array"});
       const sheet=wb.Sheets[wb.SheetNames[0]];
@@ -463,6 +565,8 @@ document.addEventListener("keydown",(e)=>{
   if(e.key==="2") gradeCurrent("hard");
   if(e.key==="3") gradeCurrent("good");
   if(e.key==="Enter" && document.activeElement.id==="quizAnswer") checkQuiz();
+  if(e.key.toLowerCase()==="h") studyStep();
+  if(e.key.toLowerCase()==="a") toggleAutoStudy();
 });
 document.getElementById("offlineStatus") && (document.getElementById("offlineStatus").textContent = navigator.onLine ? "Đang online. App sẽ tự lưu để dùng offline." : "Đang offline.");
 initAuth();

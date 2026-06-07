@@ -49,3 +49,6 @@ button.secondary{background:#667085}button.danger{background:var(--danger)}butto
 .check-grid label{display:flex;align-items:center;gap:8px;background:#f5f7fb;border:1px solid #e7ebf3;border-radius:14px;padding:10px;font-weight:700}
 .check-grid input{width:auto;margin:0;transform:scale(1.15)}
 @media(max-width:560px){.grid4{grid-template-columns:1fr 1fr}.check-grid{grid-template-columns:1fr}}
+
+.study-btn{background:#7f56d9}
+#autoStudyBtn.auto-on{background:#039855}
