@@ -1,0 +1,72 @@
+[
+  {
+    "hanzi": "生产",
+    "pinyin": "shēngchǎn",
+    "vi": "sản xuất",
+    "en": "production",
+    "deck": "Công xưởng"
+  },
+  {
+    "hanzi": "进度",
+    "pinyin": "jìndù",
+    "vi": "tiến độ",
+    "en": "progress",
+    "deck": "Công xưởng"
+  },
+  {
+    "hanzi": "质量",
+    "pinyin": "zhìliàng",
+    "vi": "chất lượng",
+    "en": "quality",
+    "deck": "Công xưởng"
+  },
+  {
+    "hanzi": "订单",
+    "pinyin": "dìngdān",
+    "vi": "đơn hàng",
+    "en": "order",
+    "deck": "Công xưởng"
+  },
+  {
+    "hanzi": "客户",
+    "pinyin": "kèhù",
+    "vi": "khách hàng",
+    "en": "customer",
+    "deck": "Văn phòng"
+  },
+  {
+    "hanzi": "交期",
+    "pinyin": "jiāoqī",
+    "vi": "ngày giao hàng",
+    "en": "delivery date",
+    "deck": "Công xưởng"
+  },
+  {
+    "hanzi": "加班",
+    "pinyin": "jiābān",
+    "vi": "tăng ca",
+    "en": "overtime",
+    "deck": "Công xưởng"
+  },
+  {
+    "hanzi": "确认",
+    "pinyin": "quèrèn",
+    "vi": "xác nhận",
+    "en": "confirm",
+    "deck": "Văn phòng"
+  },
+  {
+    "hanzi": "报告",
+    "pinyin": "bàogào",
+    "vi": "báo cáo",
+    "en": "report",
+    "deck": "Văn phòng"
+  },
+  {
+    "hanzi": "检查",
+    "pinyin": "jiǎnchá",
+    "vi": "kiểm tra",
+    "en": "inspect/check",
+    "deck": "QC"
+  }
+]

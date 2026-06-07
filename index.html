@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#172033">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Vocab Master">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <title>Vocab Master V2</title>
+</head>
+<body>
+  <section id="lockScreen" class="lock-screen">
+    <div class="lock-card">
+      <div class="lock-logo">词</div>
+      <h1>Vocab Master</h1>
+      <p id="lockText">Nhập mật khẩu để mở app.</p>
+
+      <div id="setupBox" class="hidden">
+        <input id="setupPass1" type="password" placeholder="Tạo mật khẩu mới">
+        <input id="setupPass2" type="password" placeholder="Nhập lại mật khẩu">
+        <button onclick="setupPassword()">Tạo Mật Khẩu</button>
+      </div>
+
+      <div id="loginBox" class="hidden">
+        <input id="loginPass" type="password" placeholder="Mật khẩu">
+        <button onclick="unlockApp()">Mở App</button>
+      </div>
+
+      <p class="tiny">V2 có khóa app. Dữ liệu từ vựng lưu trên iPhone của bạn.</p>
+    </div>
+  </section>
+
+  <div id="appShell" class="hidden">
+    <header class="top">
+      <div>
+        <div class="app-title">Vocab Master</div>
+        <div class="app-subtitle">PWA Offline V2</div>
+      </div>
+      <button id="lockBtn" class="ghost" onclick="lockApp()">Khóa</button>
+    </header>
+
+    <main>
+      <section id="screen-home" class="screen active">
+        <div class="stats">
+          <div><b id="statTotal">0</b><span>Tổng từ</span></div>
+          <div><b id="statKnown">0</b><span>Đã thuộc</span></div>
+          <div><b id="statUnknown">0</b><span>Chưa thuộc</span></div>
+        </div>
+
+        <div class="card">
+          <h2>Học nhanh</h2>
+          <button onclick="go('flash')">Bắt đầu Flashcard</button>
+          <button class="secondary" onclick="go('quiz')">Luyện Thi</button>
+        </div>
+
+        <div class="card">
+          <h2>Bảo mật V2</h2>
+          <p>App đã có màn hình khóa. Người có link chỉ thấy màn hình nhập mật khẩu, còn từ vựng của bạn lưu trực tiếp trên iPhone.</p>
+        </div>
+      </section>
+
+      <section id="screen-flash" class="screen">
+        <div class="card controls">
+          <select id="deckFilter"></select>
+          <select id="statusFilter">
+            <option value="all">Tất cả từ</option>
+            <option value="new">Từ mới</option>
+            <option value="unknown">Từ chưa thuộc</option>
+            <option value="known">Từ đã thuộc</option>
+          </select>
+          <button onclick="loadFlash()">Tải bộ từ</button>
+        </div>
+
+        <div class="flash-card">
+          <div class="counter" id="counter">0/0</div>
+          <div class="hanzi" id="fcHanzi">Chưa có từ</div>
+          <div class="pinyin hidden" id="fcPinyin"></div>
+          <div class="meaning hidden" id="fcMeaning"></div>
+          <div class="deckline" id="fcDeck"></div>
+        </div>
+
+        <div class="grid2">
+          <button onclick="speakCurrent('zh-CN')">🔊 Trung</button>
+          <button onclick="showAnswer()">Xem nghĩa</button>
+        </div>
+        <div class="grid2">
+          <button class="danger" onclick="markCurrent('unknown')">Chưa thuộc</button>
+          <button class="success" onclick="markCurrent('known')">Đã thuộc</button>
+        </div>
+        <div class="grid2">
+          <button class="secondary" onclick="prevCard()">Quay lại</button>
+          <button class="secondary" onclick="nextCard()">Tiếp theo</button>
+        </div>
+      </section>
+
+      <section id="screen-quiz" class="screen">
+        <div class="card">
+          <h2>Luyện Thi</h2>
+          <p>Nhìn tiếng Việt, gõ Hán tự hoặc Pinyin đều được.</p>
+          <button onclick="startQuiz()">Bắt đầu</button>
+        </div>
+
+        <div class="quiz-box">
+          <div class="counter" id="quizCounter">0/0</div>
+          <div class="question" id="quizQuestion">Bấm bắt đầu</div>
+          <input id="quizAnswer" placeholder="Nhập Hán tự hoặc Pinyin">
+          <button onclick="checkQuiz()">Kiểm tra</button>
+          <div id="quizResult" class="quiz-result"></div>
+        </div>
+      </section>
+
+      <section id="screen-manage" class="screen">
+        <div class="card">
+          <h2>Thêm từ mới</h2>
+          <input id="addHanzi" placeholder="Hán tự / 中文">
+          <input id="addPinyin" placeholder="Pinyin">
+          <input id="addVi" placeholder="Tiếng Việt">
+          <input id="addEn" placeholder="English">
+          <input id="addDeck" placeholder="Bộ từ vựng" value="Default">
+          <button onclick="addWord()">Thêm từ</button>
+        </div>
+
+        <div class="card">
+          <h2>Import JSON</h2>
+          <p>Chọn file JSON theo mẫu sample_vocab.json.</p>
+          <input type="file" id="importFile" accept=".json,application/json">
+          <button onclick="importJson()">Import</button>
+        </div>
+
+        <div class="card">
+          <h2>Backup</h2>
+          <button onclick="exportBackup()">Export Backup JSON</button>
+          <button class="danger" onclick="resetAllStatus()">Reset trạng thái học</button>
+          <button class="danger" onclick="deleteAllWords()">Xóa toàn bộ từ</button>
+        </div>
+
+        <div class="card">
+          <h2>Danh sách từ mới nhất</h2>
+          <div id="wordList" class="word-list"></div>
+        </div>
+      </section>
+
+      <section id="screen-settings" class="screen">
+        <div class="card">
+          <h2>Cài đặt đọc</h2>
+          <label>Tốc độ đọc</label>
+          <input id="rateInput" type="range" min="0.5" max="1.3" step="0.05" value="0.85">
+          <div id="rateValue">0.85</div>
+          <button onclick="testVoice()">Test giọng Trung</button>
+        </div>
+
+        <div class="card">
+          <h2>Đổi mật khẩu</h2>
+          <input id="oldPass" type="password" placeholder="Mật khẩu hiện tại">
+          <input id="newPass1" type="password" placeholder="Mật khẩu mới">
+          <input id="newPass2" type="password" placeholder="Nhập lại mật khẩu mới">
+          <button onclick="changePassword()">Đổi Mật Khẩu</button>
+        </div>
+
+        <div class="card">
+          <h2>Khóa app</h2>
+          <label class="check-row">
+            <input id="lockEnabled" type="checkbox" onchange="toggleLockEnabled()">
+            <span>Bật màn hình khóa khi mở app</span>
+          </label>
+          <button class="secondary" onclick="lockApp()">Khóa Ngay</button>
+        </div>
+
+        <div class="card">
+          <h2>Trạng thái Offline</h2>
+          <div id="offlineStatus">Đang kiểm tra...</div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="tabs">
+      <button onclick="go('home')" class="tab active" id="tab-home">Trang chủ</button>
+      <button onclick="go('flash')" class="tab" id="tab-flash">Flashcard</button>
+      <button onclick="go('quiz')" class="tab" id="tab-quiz">Luyện thi</button>
+      <button onclick="go('manage')" class="tab" id="tab-manage">Quản lý</button>
+      <button onclick="go('settings')" class="tab" id="tab-settings">Cài đặt</button>
+    </nav>
+  </div>
+
+  <div id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
