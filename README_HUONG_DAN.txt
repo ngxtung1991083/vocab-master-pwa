@@ -1,4 +1,4 @@
-VOCAB MASTER PWA OFFLINE V5 LEARNING AUTO PRO
+VOCAB MASTER PWA OFFLINE V6 CLOUD SYNC
 
 BAN V4 CO GI MOI?
 - Co mat khau khoa app.
@@ -124,3 +124,58 @@ V5 SUA LOI VA NANG CAP
 4. Phim tat tren may tinh:
 - H: Hoc bai
 - A: Bat/tat Tu dong
+
+
+========================================
+V6 CLOUD SYNC - DONG BO GITHUB
+========================================
+Muc tieu:
+- Import tu vung tren may tinh.
+- Bam "Day len GitHub".
+- Mo iPhone.
+- Bam "Tai tu GitHub".
+- iPhone co toan bo tu vung.
+
+CAN CO:
+1. GitHub repository dang chay app.
+2. GitHub Fine-grained Personal Access Token.
+
+TAO TOKEN:
+1. Vao GitHub.
+2. Bam avatar goc phai.
+3. Settings.
+4. Developer settings.
+5. Personal access tokens.
+6. Fine-grained tokens.
+7. Generate new token.
+8. Repository access: chon only repository vocab-master-pwa.
+9. Permissions:
+   - Contents: Read and write.
+10. Generate token.
+11. Copy token.
+
+CAU HINH TRONG APP:
+Vao Quan Ly -> Dong bo GitHub:
+- GitHub username: ngxtung1991083
+- Repository: vocab-master-pwa
+- Branch: main
+- File du lieu: data/vocab_sync.json
+- Token: dan token GitHub vao
+- Bam Luu cau hinh
+
+QUY TRINH DUNG:
+May tinh:
+1. Import Excel / CSV / JSON.
+2. Bam Day len GitHub.
+
+iPhone:
+1. Mo app.
+2. Vao Quan Ly.
+3. Bam Tai tu GitHub.
+4. Du lieu se ve iPhone.
+
+LUU Y BAO MAT:
+- Token chi luu trong LocalStorage cua thiet bi ban nhap.
+- Khong chia se token cho nguoi khac.
+- Neu lo token, xoa token tren GitHub ngay.
+- Voi PWA tinh, day la giai phap thuc dung mien phi, khong phai he thong bao mat doanh nghiep.

@@ -3,6 +3,7 @@ const SETTING_KEY = "vocab_master_settings_v3";
 const AUTH_KEY = "vocab_master_auth_v3";
 const SESSION_KEY = "vocab_master_session_v3";
 const LOG_KEY = "vocab_master_logs_v3";
+const SYNC_KEY = "vocab_master_sync_v6";
 
 let words = [];
 let filtered = [];
@@ -544,12 +545,161 @@ function renderStats(){
 }
 function escapeHtml(s){ return (s||"").toString().replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m])); }
 
+
+function syncSettings(){
+  try{return JSON.parse(localStorage.getItem(SYNC_KEY)||"{}")}catch(e){return{}}
+}
+function saveSyncSettings(){
+  const s={
+    owner: normalize(document.getElementById("syncOwner").value),
+    repo: normalize(document.getElementById("syncRepo").value),
+    branch: normalize(document.getElementById("syncBranch").value) || "main",
+    path: normalize(document.getElementById("syncPath").value) || "data/vocab_sync.json",
+    token: document.getElementById("syncToken").value || syncSettings().token || ""
+  };
+  if(!s.owner || !s.repo || !s.token){ toast("Cần nhập username, repo và token"); return; }
+  localStorage.setItem(SYNC_KEY, JSON.stringify(s));
+  setSyncStatus("Đã lưu cấu hình đồng bộ trên thiết bị này.");
+}
+function loadSyncSettingsToForm(){
+  const s=syncSettings();
+  const set=(id,v)=>{const el=document.getElementById(id); if(el) el.value=v||"";};
+  set("syncOwner",s.owner);
+  set("syncRepo",s.repo);
+  set("syncBranch",s.branch||"main");
+  set("syncPath",s.path||"data/vocab_sync.json");
+  set("syncToken",s.token);
+}
+function clearSyncToken(){
+  const s=syncSettings();
+  delete s.token;
+  localStorage.setItem(SYNC_KEY, JSON.stringify(s));
+  const el=document.getElementById("syncToken"); if(el) el.value="";
+  setSyncStatus("Đã xóa token trên thiết bị này.");
+}
+function setSyncStatus(msg){
+  const el=document.getElementById("syncStatus");
+  if(el) el.textContent=msg;
+  toast(msg);
+}
+function requireSyncSettings(){
+  let s=syncSettings();
+  const owner=document.getElementById("syncOwner")?.value;
+  if(owner){
+    s={
+      owner: normalize(document.getElementById("syncOwner").value),
+      repo: normalize(document.getElementById("syncRepo").value),
+      branch: normalize(document.getElementById("syncBranch").value) || "main",
+      path: normalize(document.getElementById("syncPath").value) || "data/vocab_sync.json",
+      token: document.getElementById("syncToken").value || s.token || ""
+    };
+  }
+  if(!s.owner || !s.repo || !s.token) throw new Error("Thiếu cấu hình GitHub. Hãy nhập username, repo và token.");
+  if(!s.branch) s.branch="main";
+  if(!s.path) s.path="data/vocab_sync.json";
+  localStorage.setItem(SYNC_KEY, JSON.stringify(s));
+  return s;
+}
+function b64EncodeUnicode(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function b64DecodeUnicode(str){
+  return decodeURIComponent(escape(atob(str.replace(/\n/g,""))));
+}
+async function githubGetFile(s){
+  const url=`https://api.github.com/repos/${encodeURIComponent(s.owner)}/${encodeURIComponent(s.repo)}/contents/${s.path}?ref=${encodeURIComponent(s.branch)}`;
+  const res=await fetch(url,{headers:{
+    "Accept":"application/vnd.github+json",
+    "Authorization":"Bearer "+s.token,
+    "X-GitHub-Api-Version":"2022-11-28"
+  }});
+  if(res.status===404) return null;
+  if(!res.ok) throw new Error("GitHub GET lỗi: "+res.status+" "+await res.text());
+  return await res.json();
+}
+async function githubPutFile(s, contentText, sha){
+  const url=`https://api.github.com/repos/${encodeURIComponent(s.owner)}/${encodeURIComponent(s.repo)}/contents/${s.path}`;
+  const body={
+    message:"Update vocab sync "+new Date().toISOString(),
+    content:b64EncodeUnicode(contentText),
+    branch:s.branch
+  };
+  if(sha) body.sha=sha;
+  const res=await fetch(url,{method:"PUT",headers:{
+    "Accept":"application/vnd.github+json",
+    "Authorization":"Bearer "+s.token,
+    "X-GitHub-Api-Version":"2022-11-28",
+    "Content-Type":"application/json"
+  },body:JSON.stringify(body)});
+  if(!res.ok) throw new Error("GitHub PUT lỗi: "+res.status+" "+await res.text());
+  return await res.json();
+}
+function syncPayload(){
+  return {
+    app:"Vocab Master",
+    version:6,
+    exportedAt:new Date().toISOString(),
+    words,
+    logs:logs()
+  };
+}
+async function pushToGitHub(){
+  try{
+    const s=requireSyncSettings();
+    setSyncStatus("Đang đẩy dữ liệu lên GitHub...");
+    const old=await githubGetFile(s);
+    const payload=JSON.stringify(syncPayload(),null,2);
+    await githubPutFile(s,payload,old?.sha);
+    setSyncStatus("Đã đẩy dữ liệu lên GitHub thành công.");
+  }catch(e){ setSyncStatus("Lỗi đẩy GitHub: "+e.message); }
+}
+async function pullFromGitHub(){
+  try{
+    const s=requireSyncSettings();
+    if(!confirm("Tải dữ liệu từ GitHub sẽ thay thế dữ liệu hiện tại trên thiết bị này. Bạn nên Export Backup trước. Tiếp tục?")) return;
+    setSyncStatus("Đang tải dữ liệu từ GitHub...");
+    const file=await githubGetFile(s);
+    if(!file) throw new Error("Chưa có file đồng bộ trên GitHub. Hãy Đẩy lên GitHub từ thiết bị có dữ liệu trước.");
+    const data=JSON.parse(b64DecodeUnicode(file.content));
+    const newWords=Array.isArray(data) ? data : (data.words||[]);
+    words=newWords.map(normalizeWordObj).filter(w=>w.hanzi);
+    saveWords();
+    if(data.logs) saveLogs(data.logs);
+    setSyncStatus(`Đã tải ${words.length} từ từ GitHub.`);
+  }catch(e){ setSyncStatus("Lỗi tải GitHub: "+e.message); }
+}
+async function mergeFromGitHub(){
+  try{
+    const s=requireSyncSettings();
+    setSyncStatus("Đang gộp dữ liệu từ GitHub...");
+    const file=await githubGetFile(s);
+    if(!file) throw new Error("Chưa có file đồng bộ trên GitHub.");
+    const data=JSON.parse(b64DecodeUnicode(file.content));
+    const remote=(Array.isArray(data) ? data : (data.words||[])).map(normalizeWordObj).filter(w=>w.hanzi);
+    const map=new Map();
+    words.forEach(w=>map.set((w.hanzi+"|"+w.pinyin+"|"+w.deck).toLowerCase(), w));
+    let added=0, updated=0;
+    remote.forEach(r=>{
+      const key=(r.hanzi+"|"+r.pinyin+"|"+r.deck).toLowerCase();
+      if(!map.has(key)){ words.push(r); added++; }
+      else{
+        const local=map.get(key);
+        if((r.updatedAt||"") > (local.updatedAt||"")){
+          Object.assign(local,r); updated++;
+        }
+      }
+    });
+    saveWords();
+    setSyncStatus(`Đã gộp dữ liệu: thêm ${added}, cập nhật ${updated}.`);
+  }catch(e){ setSyncStatus("Lỗi gộp GitHub: "+e.message); }
+}
+
 function initApp(){
   loadWordsLocal();
   const s=settings(); if(s.rate){ document.getElementById("rateInput").value=s.rate; document.getElementById("rateValue").textContent=s.rate; }
   applyDisplaySettings();
   const a=getAuth(); if(document.getElementById("lockEnabled")) document.getElementById("lockEnabled").checked = a.lockEnabled !== false;
-  updateStats(); refreshDecks(); renderWordList(); renderStats();
+  updateStats(); refreshDecks(); renderWordList(); renderStats(); loadSyncSettingsToForm();
 }
 
 document.getElementById("rateInput")?.addEventListener("input", e=>{ document.getElementById("rateValue").textContent=e.target.value; const s=settings(); s.rate=e.target.value; saveSettings(s); });

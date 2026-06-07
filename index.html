@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
-  <title>Vocab Master V5</title>
+  <title>Vocab Master V6</title>
 </head>
 <body>
   <section id="lockScreen" class="lock-screen">
@@ -26,7 +26,7 @@
         <input id="loginPass" type="password" placeholder="Mật khẩu">
         <button onclick="unlockApp()">Mở App</button>
       </div>
-      <p class="tiny">V5 Learning Auto Pro · Excel Fix · Học bài</p>
+      <p class="tiny">V6 Cloud Sync · GitHub Backup</p>
     </div>
   </section>
 
@@ -34,7 +34,7 @@
     <header class="top">
       <div>
         <div class="app-title">Vocab Master</div>
-        <div class="app-subtitle">V5 Learning Auto Pro</div>
+        <div class="app-subtitle">V6 Cloud Sync</div>
       </div>
       <button class="ghost" onclick="lockApp()">Khóa</button>
     </header>
@@ -193,6 +193,29 @@
           <button onclick="exportBackup()">Export Backup JSON</button>
           <button class="danger" onclick="resetAllStatus()">Reset Trạng Thái Học</button>
           <button class="danger" onclick="deleteAllWords()">Xóa Toàn Bộ Từ</button>
+        </div>
+
+        <div class="card">
+          <h2>Đồng bộ GitHub</h2>
+          <p>Dùng GitHub để đồng bộ giữa máy tính và iPhone. Token chỉ lưu trên thiết bị của bạn.</p>
+          <input id="syncOwner" placeholder="GitHub username, ví dụ: ngxtung1991083">
+          <input id="syncRepo" placeholder="Repository, ví dụ: vocab-master-pwa">
+          <input id="syncBranch" placeholder="Branch" value="main">
+          <input id="syncPath" placeholder="File dữ liệu" value="data/vocab_sync.json">
+          <input id="syncToken" type="password" placeholder="GitHub Fine-grained token">
+          <div class="grid2">
+            <button onclick="saveSyncSettings()">Lưu cấu hình</button>
+            <button class="secondary" onclick="loadSyncSettingsToForm()">Tải cấu hình</button>
+          </div>
+          <div class="grid2">
+            <button class="success" onclick="pushToGitHub()">Đẩy lên GitHub</button>
+            <button onclick="pullFromGitHub()">Tải từ GitHub</button>
+          </div>
+          <div class="grid2">
+            <button class="secondary" onclick="mergeFromGitHub()">Gộp dữ liệu từ GitHub</button>
+            <button class="danger" onclick="clearSyncToken()">Xóa token trên máy này</button>
+          </div>
+          <p id="syncStatus" class="sync-status">Chưa đồng bộ.</p>
         </div>
 
         <div class="card">
